@@ -2,6 +2,16 @@
 
 nenrin-vis は, 個人の活動ログを「時間の経過」ではなく「活動の累積」として極座標上に可視化し, 人生の密度を有機的な年輪 (Tree Rings) として描画するプロジェクト.
 
+この説明は成長記録(活動ログ)を主対象にしているが, 実装は特定用途へ固定しない.
+nenrin-vis は, 任意の離散ステップ軸(`stepIndex`)とカテゴリ軸(`domain`)上の「累積」を, 年輪状の ridge/band へ変換するライブラリとして設計する.
+
+ここでの `stepIndex` は, 必ずしも「日」や「時刻」を意味しない.
+
+* 例: 日, 週, 月, 年
+* 例: 時, 分
+* 例: 学期, プロジェクトフェーズ
+* 例: 任意の離散軸(時間でない軸)
+
 ## Growth Algorithm (成長アルゴリズム)
 
 ### Model: Local Accumulation (局所累積成長)
@@ -12,7 +22,7 @@ nenrin-vis は, 個人の活動ログを「時間の経過」ではなく「活�
 
 ### Mathematical Logic
 
-時刻 $t$ における角度 $\theta$ の半径 $R(\theta, t)$ を以下の式で定義する.
+step $t$ における角度 $\theta$ の半径 $R(\theta, t)$ を以下の式で定義する.
 
 $$
 R(\theta, t) = R(\theta, t-1) + \Delta r(\theta, t)
@@ -22,9 +32,15 @@ $$
 \Delta r(\theta, t) = v_{min} + \alpha \cdot A(\theta, t)
 $$
 
-* $v_{min}$ (Minimum Growth Velocity): 生存基底速度 ($v_{min} > 0$). 活動ゼロの期間も極薄い層を形成し, 時間軸が消失することを防ぐ (「生きていた証」の層).
+* $v_{min}$ (Minimum Growth Velocity): 生存基底速度 ($v_{min} \ge 0$). 活動ゼロの期間も極薄い層を形成し, 軸の層が消失することを防ぐために使う
 * $A(\theta, t)$ (Activity Volume): そのジャンルにおける活動量.
 * $\alpha$ (Scaling Coefficient): 視覚的な重み付け係数. 入力 `NenrinConfig.growthPerActivity` と同義の係数.
+
+`vmin` の補足.
+
+* `vmin = 0` も許容する
+* ただし, イベントが無い step は成長しないため, 年輪の「時間の層」が消えやすい
+* ridge が重なって band が退化し, 描画や選択が不安定になり得るので非推奨
 
 ### Boundary Condition: Seamless Closed Curve
 
@@ -141,10 +157,13 @@ Macro では帯を選択すると, その step に属するイベント群を参
 
 nenrin-vis (Core) は, 入力データを離散ステップに正規化済みである前提で扱う. つまり, timestampやタイムゾーン, 「日/週/月」の区切りは Core の責務に含めない.
 
+Core が扱うのは「離散化済みの軸」としての `stepIndex` のみで, その軸が時間かどうかは問わない.
+
 * Integration layer (入力側) の責務
     * timestampなどの生データを `stepIndex` (整数) へ離散化
     * 1つの生ログが複数ドメインにまたがる場合の分割(duplicate, split等)と, その重み付け
     * 正規化やスコアリング(滞在時間, 文字数, 重要度など)を `weight` に変換
+    * 「時間/軸の圧縮」(イベントが無い step を作らない)をしたい場合, `stepIndex` の再割り当てで実現する
 * Core (nenrin-core) の責務
     * `(stepIndex, domainId, weight)` の集合を集計し, 描画用の骨格(年輪)を生成
     * Event Dots (点) の出力は別途検討とし, 現時点では Core API に含めない

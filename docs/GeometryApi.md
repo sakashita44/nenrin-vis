@@ -272,6 +272,12 @@ $$
 r_{base}(t) = (t + 1) \cdot v_{min}
 $$
 
+`vmin = 0` の注意.
+
+* `vmin = 0` の場合, $r_{base}(t)=0$ になる
+* `baseCircle` を使うアルゴリズム(例: `polar-linear-virtual-anchors`)は, band の退化や点列の数値的退化が起きやすい
+* そのため, アルゴリズム実装は `vmin > 0` を要求して `Error` を throw して良い
+
 アルゴリズム(提案).
 
 * 入力: anchors $(\theta_i, r_i)$ を $\theta$ 昇順(正規化済み)として扱う

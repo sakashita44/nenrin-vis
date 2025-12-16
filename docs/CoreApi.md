@@ -26,11 +26,18 @@
 
 ## Terms
 
-* **step**: 離散時間インデックス `stepIndex` の1単位
+* **step**: 離散インデックス `stepIndex` の1単位
 * **domain**: 活動ジャンル. `domainId` で識別し, `angleRad` を持つ
 * **ridge**: 各 step `t` の外周境界線(閉曲線). 数式上の $R(\theta, t)$ に対応する
 * **band**: step `t` に属する領域. `ridge(t-1)` と `ridge(t)` に挟まれた領域
 * **band center**: `band(t)` の代表半径. $\frac{R(\theta, t-1)+R(\theta, t)}{2}$
+
+`stepIndex` は必ずしも時間ではない.
+
+* 例: 日, 週, 月, 年
+* 例: 時, 分
+* 例: プロジェクトフェーズ, 学期
+* 例: 任意の離散軸
 
 ## Input
 
@@ -72,7 +79,7 @@ export interface NenrinInput {
 
 * `events.length >= 1`
 * `config.domains.length >= 1`
-* `vmin` は有限(`Number.isFinite`)かつ `vmin > 0`
+* `vmin` は有限(`Number.isFinite`)かつ `vmin >= 0`
 * `growthPerActivity` は有限(`Number.isFinite`)かつ `growthPerActivity >= 0`
 * `stepIndex` は整数
 * `stepIndex` は非負(`stepIndex >= 0`)
@@ -113,16 +120,30 @@ export interface NenrinInput {
 
 ## Stepの意味論
 
-Core は `stepIndex` を離散的なタイムラインとして扱う.
+Core は `stepIndex` を離散的な軸として扱う.
 
 * `stepCount = maxStepIndex + 1`
 * Core は step `t` にイベントが無くても `t = 0..maxStepIndex` の全stepを計算する
 * イベントが無いstepでも, 全domainが `vmin` により成長する
+    * `vmin = 0` の場合, イベントが無い step は成長しない
 * 入力 `events[].stepIndex = t` は, `band(t)` に属する event として解釈する
+
+この仕様により, 入力イベントが sparse でも, 出力は dense な step 列(0..max)になる.
+
+時間や軸を「圧縮」したい場合(イベントが無い step を作らない場合)は, Integration layer 側で `stepIndex` を再割り当てして渡す.
+
+* 例: イベントのある step だけを抽出して `0..K` に詰める
+* Core は入力 `stepIndex` の意味や単位を解釈しないため, 圧縮の方針は入力側で決める
 
 初期半径.
 
 * 実装上は $R(\theta, -1)=0$ とし, step `0` の更新で `vmin + growthPerActivity * A(θ,0)` が初期値になる想定
+
+`vmin = 0` の注意.
+
+* `vmin = 0` は許容するが非推奨
+* イベントが無い step が続くと ridge が重なりやすく, band が退化(面積が 0)し得る
+* この退化は, Macro の帯選択や Geometry の曲線生成を不安定にし得る
 
 band の内側境界.
 
@@ -223,6 +244,11 @@ export interface NenrinCoreOptions {
 
   // Whether to include activitySumSeriesByDomainId in the output.
   includeActivitySumSeriesByDomainId?: boolean; // default: false
+
+  // Trade-off between determinism and performance.
+  // - "fast": sum weights in input order (faster, but floating point accumulation can depend on event order)
+  // - "stable": sort weights within each (stepIndex, domainId) bucket before summing (slower, but order-independent)
+  activitySumPolicy?: "fast" | "stable"; // default: "fast"
 }
 
 ```
@@ -265,6 +291,7 @@ export function computeNenrinCore(
 * `vmin` の適用範囲
     * `vmin` は全 domain に対して毎 step 適用する
     * event が無い step でも成長する(時間の層が完全に消えない)
+    * `vmin = 0` の場合, イベントが無い step は成長しない
 
 * `growthPerActivity` (aka $\alpha$)
     * `weight` の集計値を半径増分へ換算する成長係数
@@ -313,8 +340,11 @@ Core 出力は入力が同一なら同一にする.
 
 決定性ルール.
 
-* `events` の順序は出力へ影響しない
-    * Core は `(stepIndex, domainId)` 単位で集計し, 集計結果だけを使う
+* `events` の順序に対する挙動は `options.activitySumPolicy` に依存する
+    * `"fast"` (default): bucket `(stepIndex, domainId)` 内で入力順に加算する
+        * 高速だが, 浮動小数の加算順に起因して, `events` の順序が結果へ影響し得る
+    * `"stable"`: bucket `(stepIndex, domainId)` 内の `weight` を数値昇順でソートしてから加算する
+        * 低速だが, 入力順序が変わっても集計結果が変わりにくい(決定性を強める)
 * `events[].metadata` と `events[].eventKey` は Core 出力へ影響しない
     * Core は `metadata` と `eventKey` を参照しない
 * `anchors` の順序は固定
@@ -330,7 +360,7 @@ Core 出力は入力が同一なら同一にする.
 
 * `events.length === 0`
 * `config.domains.length === 0`
-* `vmin` が非有限, または `vmin <= 0`
+* `vmin` が非有限, または `vmin < 0`
 * `growthPerActivity` が非有限, または `growthPerActivity < 0`
 * `config.domains[].id` の重複
 * `stepIndex` が整数でない
@@ -341,6 +371,17 @@ Core 出力は入力が同一なら同一にする.
 * `thetaRad` 正規化後の重複(同一角度). 判定は `===` で良い
 
 `minDomainAngleSeparationRad` が指定された場合, 角度近接の違反も `Error` として良い.
+
+## Testing notes
+
+`activitySumPolicy` は決定性と性能のトレードオフなので, テストで期待値を分ける.
+
+* `activitySumPolicy: "fast"` (default)
+    * 同一入力(同一 `events` 配列順)なら同一出力になることを確認する
+    * `events` の順序を変えた場合に, 集計結果が変わり得ることは仕様として許容する
+* `activitySumPolicy: "stable"`
+    * `events` の順序を任意に permute しても, `(stepIndex, domainId)` ごとの `activitySum` が不変であることを確認する
+    * `weight` は有限かつ非負のみ許容なので, 数値昇順ソートが決定論の要になる
 
 ## Notes for renderer
 

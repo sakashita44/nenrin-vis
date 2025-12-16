@@ -7,6 +7,7 @@
 * `docs/concepts.md`
 * `docs/roadmap.md`
 * `docs/GeometryApi.md`
+* `docs/ErrorPolicy.md`
 
 ## Scope
 
@@ -16,6 +17,30 @@
 * Canvas, DOM, React に依存しない
 * 曲線補間やサンプリングは扱わない(中間レイヤへ分離)
 * ランタイム依存は0を維持する(集計とanchors生成に専念する)
+
+## Stability policy
+
+このドキュメントに記載した公開APIは, パッケージのroot exportから利用する前提で安定化する.
+deep importは非保証とする.
+
+安定範囲.
+
+* Stable
+    * `computeNenrinCore(input, options?)` のシグネチャ
+    * `NenrinInput`, `NenrinConfig`, `Domain`, `Event` の意味論と入力制約
+    * `NenrinCoreOutput` のうち, 描画に必須なフィールド
+        * `stepCount`, `domainIds`, `domainAnglesRad`, `ridges`
+        * `ridges[].anchors` の形状保証と順序保証
+* Diagnostics
+    * デバッグや分析用途の補助出力. 将来, minorで変更し得る
+        * `activitySumByStepDomain?`
+        * `activitySumSeriesByDomainId?`
+
+SemVer運用.
+
+* Stableの破壊的変更はmajor.
+* Stableに対する後方互換な追加はminor.
+* Diagnosticsはminorで形状変更し得る.
 
 ## Non-goals
 
@@ -42,6 +67,8 @@
 ## Input
 
 ### TypeScript types
+
+型定義は `@nenrin/types` に置く. `@nenrin/core` は利用者向けに同じ型を再exportしても良い.
 
 ```ts
 export interface NenrinConfig {
@@ -108,6 +135,9 @@ export interface NenrinInput {
 ### Validation policy
 
 不正入力は `Error` を throw する.
+
+エラー識別は `code` を推奨する.
+詳細は `docs/ErrorPolicy.md` を参照.
 
 方針.
 

@@ -7,6 +7,7 @@
 * `docs/CoreApi.md`
 * `docs/concepts.md`
 * `docs/roadmap.md`
+* `docs/ErrorPolicy.md`
 
 ## Scope
 
@@ -15,6 +16,31 @@ Geometry レイヤの責務.
 * Core 出力(`anchors`)を, 描画用の点列(polyline)へ変換
 * 曲線補間, サンプリング, seam(0と$2\pi$)の扱い
 * 補間アルゴリズムを注入できるようにする
+
+## Stability policy
+
+このドキュメントに記載した公開APIは, パッケージのroot exportから利用する前提で安定化する.
+deep importは非保証とする.
+
+安定範囲.
+
+* Stable
+    * `buildRidgePolylines` のシグネチャと戻り型
+    * 公開型
+        * `CurveAlgorithm`, `GeometryOptions`
+        * `Ridge`, `PolarAnchor`
+        * `RidgePolylinePolar`, `RidgePolylineXy`, `PolarPoint`, `XyPoint`
+    * `output: "polar" | "xy"` の意味論
+* Experimental
+    * 同梱アルゴリズムのうち, nenrin特化で試行錯誤しやすいもの
+        * 例: `polar-linear-virtual-anchors`
+    * Experimentalはminorで破壊的変更し得る
+
+SemVer運用.
+
+* Stableの破壊的変更はmajor.
+* Stableに対する後方互換な追加はminor.
+* Experimentalはminorで破壊的変更し得る.
 
 ## Non-goals
 
@@ -26,6 +52,8 @@ Geometry レイヤの責務.
 ## Inputs
 
 Geometry の入力は Core の `anchors`.
+
+型定義は `@nenrin/types` に置く. `@nenrin/geometry` は利用者向けに同じ型を再exportしても良い.
 
 入力 `anchors` の順序.
 
@@ -202,6 +230,9 @@ Geometry は次を `Error` 扱いにして良い.
 * `thetaRad`, `r`, `x`, `y` が非有限値
 
 `validateFinite` が `true` の場合, 上記の非有限値は必ず `Error` とする.
+
+エラー識別は `code` を推奨する.
+詳細は `docs/ErrorPolicy.md` を参照.
 
 ## Notes
 

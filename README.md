@@ -1,5 +1,7 @@
 # nenrin-vis
 
+このリポジトリはAIコーディングサービスを利用して作成しています．
+
 Visualizing Accumulation of Activities on Polar Coordinates.
 
 個人の活動の「厚み」を, 年輪 (Tree Rings) のような極座標系で可視化するジェネラティブ・ビューワー.
@@ -25,6 +27,17 @@ dots の仕様は [`docs/DotsApi.md`](docs/DotsApi.md) を参照.
 
 環境構築は [`docs/Setup.md`](docs/Setup.md) を参照.
 
+## Docs
+
+* 実装方針: [`docs/Policy.md`](docs/Policy.md)
+* Core API: [`docs/CoreApi.md`](docs/CoreApi.md)
+* Geometry API: [`docs/GeometryApi.md`](docs/GeometryApi.md)
+* Dots API: [`docs/DotsApi.md`](docs/DotsApi.md)
+* Error policy: [`docs/ErrorPolicy.md`](docs/ErrorPolicy.md)
+* Concept: [`docs/concepts.md`](docs/concepts.md)
+* Setup: [`docs/Setup.md`](docs/Setup.md)
+* Roadmap: [`docs/roadmap.md`](docs/roadmap.md)
+
 ## Use Cases
 
 * **Personal Chronicle:** 「何もしなかった期間」は省略され, 「充実した期間」が強調されるバイオグラフィー.
@@ -38,8 +51,10 @@ dots の仕様は [`docs/DotsApi.md`](docs/DotsApi.md) を参照.
 
 * Language
     * TypeScript
+* Types
+    * `@nenrin/types`: パッケージ間のIF(中間定義)を提供するtype-onlyパッケージ. `@nenrin/core` を使わずに `@nenrin/geometry` 等を利用する場合も, この型に依存すれば契約を維持できる
 * Core logic
-    * `@nenrin/core`: 依存0の計算層. 入力eventsを集計し, ridgeの`anchors`(polar)を生成
+    * `@nenrin/core`: 依存0の計算層(推奨パス). 入力eventsを集計し, ridgeの`anchors`(polar)を生成. ただし `@nenrin/geometry` は `ridges/anchors` を直接渡せば `core` なしでも利用できる
 * Geometry
     * `@nenrin/geometry`: 依存0の幾何層. `anchors`を描画用の点列へ変換(アルゴリズムは外部注入)
     * `@nenrin/geometry-algorithms-d3` (planned): `d3-shape` 等に依存する曲線補間アルゴリズム群
@@ -55,8 +70,9 @@ dots の仕様は [`docs/DotsApi.md`](docs/DotsApi.md) を参照.
 このリポジトリ内のライブラリパッケージは, npm scope 付きで公開する前提.
 
 * `@nenrin/core`
+* `@nenrin/types`
 * `@nenrin/geometry`
-* `@nenrin/dots` (planned)
+* `@nenrin/dots`
 * `@nenrin/geometry-algorithms-d3` (planned)
 
 ## License

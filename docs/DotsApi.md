@@ -13,12 +13,13 @@
 * `docs/concepts.md`
 * `docs/CoreApi.md`
 * `docs/GeometryApi.md`
+* `docs/ErrorPolicy.md`
 
 ## Scope
 
 このドキュメントで定義する想定パッケージ.
 
-* `@nenrin/dots` (仮)
+* `@nenrin/dots`
 
 `@nenrin/dots` の責務.
 
@@ -33,6 +34,33 @@ Non-goals.
 * 画面座標(y軸下向き等), `innerRadius`, zoom/pan
 * クリック判定そのもの(ピクセル距離の hit test)の実装
 * Macro/Micro で knots を表示するかどうかの方針決定
+
+## Stability policy
+
+このドキュメントに記載した公開APIは, パッケージのroot exportから利用する前提で安定化する.
+deep importは非保証とする.
+
+安定範囲.
+
+* Stable
+    * `buildDots(ctx, algorithm, options)` のシグネチャと戻り型
+    * 公開型
+        * `DotPlacementContext`, `DotPlacementAlgorithm`, `DotsOptions`
+        * `NenrinDot`, `NenrinKnot`, `DotsOutput`
+    * `eventIndex` による `events[]` 参照の意味論
+    * 決定性(同一入力なら同一dots)の要件
+
+SemVer運用.
+
+* Stableの破壊的変更はmajor.
+* Stableに対する後方互換な追加はminor.
+
+## Error policy
+
+不正入力やアルゴリズム失敗は `Error` を throw する.
+
+エラー識別は `code` を推奨する.
+詳細は `docs/ErrorPolicy.md` を参照.
 
 ## Design choices
 
@@ -74,6 +102,8 @@ Non-goals.
 
 ## Types
 
+型定義は `@nenrin/types` に置く. `@nenrin/dots` は利用者向けに同じ型を再exportしても良い.
+
 ```ts
 export interface Event {
   stepIndex: number;
@@ -102,12 +132,12 @@ export interface Ridge {
   anchors: PolarAnchor[];
 }
 
-export interface DotPolar {
+export interface PolarPoint {
   thetaRad: number;
   r: number;
 }
 
-export interface DotXy {
+export interface XyPoint {
   x: number;
   y: number;
 }
@@ -120,7 +150,7 @@ export interface NenrinDot {
   eventIndex: number;
 
   // Model coordinate.
-  position: DotPolar | DotXy;
+  position: PolarPoint | XyPoint;
 }
 
 export interface NenrinKnot {
@@ -131,7 +161,7 @@ export interface NenrinKnot {
   eventIndex: number;
 
   // Model coordinate.
-  position: DotPolar | DotXy;
+  position: PolarPoint | XyPoint;
 }
 
 export interface DotsOutput {

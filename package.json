@@ -1,0 +1,14 @@
+{
+    "name": "nenrin-vis",
+    "private": true,
+    "scripts": {
+        "build": "pnpm -r build",
+        "clean": "pnpm -r clean",
+        "lint": "pnpm -r lint",
+        "typecheck": "pnpm -r typecheck"
+    },
+    "devDependencies": {
+        "tsup": "^8.5.0",
+        "typescript": "^5.7.2"
+    }
+}

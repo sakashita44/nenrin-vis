@@ -189,10 +189,8 @@ Event Dots (点) の扱い.
     * 入力イベントから骨格/テクスチャの座標を計算して返す
 * `@nenrin/geometry` (仮)
     * Core出力を補間して, 描画用の曲線データへ変換する
-* `@nenrin/renderer-canvas` または `@nenrin/react`
-    * Core出力を描画する
-* `@nenrin/vis` (任意)
-    * CoreとRendererをまとめて再exportする統合ラッパ
+* `@nenrin/renderer-canvas` (任意)
+    * reference implementation. Core/Geometry/Dots の出力を描画して見た目を調整する
 
 ## Data Structure Example
 
@@ -242,6 +240,8 @@ Core 内部では, 入力イベントをステップとドメイン単位で集�
 * `vmin` は有限値のみを許容する. `vmin > 0` を要求する
 * `growthPerActivity` は有限値のみを許容する. `growthPerActivity >= 0` を要求する
 * `domains` は1件以上を必須とする
+    * Coreの集計と `anchors` 生成としては `>= 1` で成立する
+    * ただし, 閉曲線として描画する曲線補間アルゴリズムは `>= 3` を要求して `Error` を throw して良い
 * `domains[].id` は重複禁止
 * `domains[].angleRad` は有限値のみを許容する. `NaN`, `Infinity` は不正入力として扱う
 * `stepIndex` は整数のみを許容する. `0..N` の範囲を前提とする

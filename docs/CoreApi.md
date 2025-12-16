@@ -19,7 +19,7 @@
 
 ## Non-goals
 
-* Notion API やデータ取得
+* データ取得
 * UI, LOD 判定, マウスイベント処理
 * 色やラベルの見た目
 * Event Dots (点) の出力仕様は別途検討 (現状の Core API には含めない)
@@ -71,7 +71,7 @@ export interface NenrinInput {
 ### Constraints
 
 * `events.length >= 1`
-* `config.domains.length >= 3`
+* `config.domains.length >= 1`
 * `vmin` は有限(`Number.isFinite`)かつ `vmin > 0`
 * `growthPerActivity` は有限(`Number.isFinite`)かつ `growthPerActivity >= 0`
 * `stepIndex` は整数
@@ -85,6 +85,11 @@ export interface NenrinInput {
 * `weight` は有限(`Number.isFinite`)かつ非負
 
 `angleRad` は任意の実数を許容するが, Core は内部的に $2\pi$ 周期で正規化して扱う(順序付け, 重複判定のため).
+
+`config.domains.length` の最小値はアルゴリズム依存.
+
+* Core は集計と `anchors` 生成のために `>= 1` を許容する
+* 閉曲線として描画する Geometry 側のアルゴリズムは, `>= 3` を要求して `Error` を throw して良い
 
 正規化(提案).
 
@@ -226,9 +231,12 @@ export interface NenrinCoreOptions {
 
 * 通常運用では, `minDomainAngleSeparationRad` を正の値で指定するのが安全
 * 推奨デフォルトは `0.05` rad
-    * `options` 未指定, または `minDomainAngleSeparationRad` 未指定の場合, Core は `0.05` rad を採用する
+    * `options` 未指定, または `minDomainAngleSeparationRad` 未指定の場合, Core は既定値を採用する
         * つまり, 角度近接チェックはデフォルトで有効
-* `minDomainAngleSeparationRad = 0` の場合, 近接チェックは無効化する(正規化後の重複角度のみを弾く)
+* `minDomainAngleSeparationRad = 0` の場合, 近接チェックは無効化する
+    * この場合, Core は「正規化後に `===` で等しい角度」だけを重複として `Error` にする
+    * `0` は `0` として扱う
+    * ただし, ほぼ同値(極端に近い角度)の挙動は入力次第で想定外になり得るため, 近接チェック無効時の見た目や安定性は保証しない
 
 `0.05` rad 未満を使う場合, 利用側が明示的に設定する.
 
@@ -322,7 +330,6 @@ Core 出力は入力が同一なら同一にする.
 
 * `events.length === 0`
 * `config.domains.length === 0`
-* `config.domains.length < 3`
 * `vmin` が非有限, または `vmin <= 0`
 * `growthPerActivity` が非有限, または `growthPerActivity < 0`
 * `config.domains[].id` の重複

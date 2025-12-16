@@ -31,23 +31,10 @@ dots の仕様は [`docs/DotsApi.md`](docs/DotsApi.md) を参照.
     * `@nenrin/geometry-algorithms-d3` (planned): `d3-shape` 等に依存する曲線補間アルゴリズム群
 * Dots (planned)
     * `@nenrin/dots`: `events` と Core 出力から dots を生成し, Micro 表示と `metadata` 参照を成立させる(配置は外部注入)
-* Rendering
-    * HTML5 Canvas API: 数万〜数十万の活動ログ (点) の高速描画
-    * React: UIコンポーネント, 状態管理
-* Integration (planned)
-    * Notion API: 個人の日記/活動ログの取得元
-    * Next.js: ホスティング, APIルートの提供
+* Rendering (planned)
+    * `@nenrin/renderer-canvas`: reference implementation. Core/Geometry/Dots の出力を描画して見た目を調整する用途
 
-## Features (Planned)
-
-* Variable Growth Velocity: 活動量に応じて成長速度が変化し, アメーバ状の有機的な年輪を形成
-* Semantic Zooming: ズームレベルに応じて, Macro(境界線+帯の選択) と Micro(点の表示) を切り替える
-* Generative Animation: 過去から現在へ, 人生が積み重なっていく様子をアニメーションで表現
-
-## Roadmap
-
-現在, Phase 1 (個人サイトでのNotion連携PoC) の開発を進める.
-詳細は [`docs/roadmap.md`](docs/roadmap.md) を参照.
+このリポジトリの成果物はライブラリ.
 
 ## Package naming
 

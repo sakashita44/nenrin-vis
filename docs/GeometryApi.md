@@ -38,6 +38,11 @@ Geometry の入力は Core の `anchors`.
 * Core 出力を入力とする場合, `anchors` は domain 欠損を作らず, 常に全domainを含む想定
 * `anchors` は `thetaRad` 昇順で, `domainId` と `thetaRad` は一意(正規化後)である想定
 
+`anchors.length` の最小値.
+
+* Core は `domains.length >= 1` を許容し得る
+* Geometry は閉曲線として扱う都合上, アルゴリズム実装が `anchors.length < 3` を `Error` 扱いにして良い
+
 ```ts
 export interface PolarAnchor {
   domainId: string;

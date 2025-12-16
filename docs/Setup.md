@@ -3,30 +3,20 @@
 このリポジトリはライブラリ優先で進める.
 
 * 目標: TypeScriptライブラリとして `@nenrin/core` と `@nenrin/geometry` をビルドして公開する
-* 非目標: 個人用のNotion連携や日記サービスをこのリポジトリへ同梱しない
+* 非目標: 個人用のデータ取得や日記サービスをこのリポジトリへ同梱しない
 
 ## 前提
 
-* Windows
-* PowerShell
+* Node.js (LTS)
+* Corepack
 
-このリポジトリは, 補助スクリプトでツールチェーンを有効化する前提.
-
-## ターミナルごとの環境有効化
-
-新しいターミナルを開いたら最初に実行する.
-
-```powershell
-. ..\..\tools\Set-Env.ps1
-```
-
-`node` や `pnpm` が見つからない場合, たいていこの手順をそのターミナルで実行していないのが原因.
+`node` と `pnpm` が PATH に通っている環境を前提とする.
 
 ## Corepack経由でpnpm (global install不要)
 
-環境有効化の後, Corepackを有効化してpnpmをactivateする.
+Corepackを有効化してpnpmをactivateする.
 
-```powershell
+```sh
 corepack enable
 corepack prepare pnpm@latest --activate
 pnpm -v
@@ -36,7 +26,7 @@ pnpm -v
 
 リポジトリrootで実行する.
 
-```powershell
+```sh
 pnpm install
 ```
 
@@ -46,7 +36,7 @@ scaffold追加後, 実際のscriptは `package.json` に置く.
 
 典型例.
 
-```powershell
+```sh
 pnpm test
 pnpm build
 ```

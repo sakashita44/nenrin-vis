@@ -12,12 +12,19 @@
 
 * 言語: TypeScript
 * 目標: 離散ステップ入力 (`stepIndex`) を受け取り, 描画用の座標データ (境界線/Ridge, 帯/Band) を出力する計算モジュール `nenrin-core` の作成
-* 技術: `d3-shape` (Spline)
+* 方針: 曲線補間(d3-shape等)はCoreに入れず, geometryレイヤへ分離
+
+### Geometry Implementation
+
+* 目標: Core出力(`anchors`)を補間し, 描画用の曲線データへ変換する `nenrin-geometry` (仮) の作成
+* 技術: `d3-shape` (Spline) 等を試行錯誤して決定
+* 方針: 出力は `polar` / `xy` を選択式にして, 描画方式は利用者が選べる状態にする
 
 ### Renderer Implementation
 
 * 目標: Coreの出力データを HTML5 Canvas 上に描画する React コンポーネントの作成
 * 方針: まずは静止画としての描画品質 (境界線と帯の読みやすさ) を確立
+* 位置づけ: 公式 reference implementation とし, core/geometry はこれに依存しない
 
 ### Notion API Integration
 
@@ -42,6 +49,7 @@
 ### UI/UX Refinement
 
 * 目標: 期間フィルタリング, カテゴリごとのOn/Off機能の実装
+* 追加: domain角度をインタラクティブに調整するeditorの検討
 
 ## Service & Library Public Release
 
@@ -60,6 +68,12 @@
 
 ## Recommended Architecture (Monorepo)
 
+このリポジトリはライブラリ優先で進められる.
+
+* `core` と `geometry` を公開可能なpackagesとして維持する
+* 統合コード(Notion取得, personal site, diary service)は必要なら別リポジトリへ分離する
+* `apps/` や `examples/` はreference実装としてのみ追加し, 必須構成にしない
+
 ```text
 root/
 ├── apps/
@@ -67,5 +81,6 @@ root/
 │   └── web-service/    (Next.js: 将来の日記/可視化サービス)
 └── packages/
     ├── core/           (TypeScript: 計算ロジック. 依存はD3.js等のみ)
+    ├── geometry/       (TypeScript: 曲線補間/サンプリング. d3-shape等)
     └── renderer/       (React: Canvas描画コンポーネント)
 ```

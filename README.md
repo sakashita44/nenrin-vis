@@ -13,6 +13,8 @@ nenrin-vis は, 単なる時系列プロットではなく, 活動の蓄積と�
 
 詳細は [`docs/concepts.md`](docs/concepts.md) を参照.
 
+環境構築は [`docs/Setup.md`](docs/Setup.md) を参照.
+
 ## Tech Stack
 
 パフォーマンスと拡張性を考慮し, 以下の技術スタックを採用する.

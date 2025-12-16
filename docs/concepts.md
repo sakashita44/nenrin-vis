@@ -7,6 +7,7 @@ nenrin-vis は, 個人の活動ログを「時間の経過」ではなく「活�
 ### Model: Local Accumulation (局所累積成長)
 
 通常の極座標プロット ($r \propto t$) とは異なり, 活動があったジャンル (角度 $\theta$) の方向だけが外側へ成長する.
+ただし, 活動が無い方向も `vmin` によって極薄く成長する.
 結果として, 年輪は正円ではなく, 活動の偏りを反映した歪んだ閉曲線 (アメーバ状) となる.
 
 ### Mathematical Logic
@@ -25,10 +26,12 @@ $$
 * $A(\theta, t)$ (Activity Volume): そのジャンルにおける活動量.
 * $\alpha$ (Scaling Coefficient): 視覚的な重み付け係数.
 
-### Boundary Condition: Periodic Cubic Spline
+### Boundary Condition: Seamless Closed Curve
 
-$\theta = 0$ (始点) と $\theta = 2\pi$ (終点) の不連続性を防ぐため, 周期的境界条件を持つ3次スプライン補間 (Periodic Cubic Spline Interpolation) を採用する.
-これにより, どこが継ぎ目か分からない滑らかな閉曲線を生成する.
+$\theta = 0$ (始点) と $\theta = 2\pi$ (終点) の不連続性を防ぐため, 継ぎ目の無い閉曲線を生成する.
+
+* 候補: periodic cubic spline, closed curve interpolation など
+* アルゴリズムは PoC で試行錯誤しながら決定する
 
 ## Rendering Logic (描画ロジック)
 
@@ -71,7 +74,7 @@ Micro は「点が重ならずに表示できる」幾何条件を満たす場�
 直線状に並んで見た目が単調にならないよう, 点の座標は「計算上の代表位置」から描画時にのみ微小にずらす.
 このずらしは読みやすさのための表示レイアウトであり, Core の意味論や集計結果は変えない.
 
-* 基本: `domain.angle` を中心角とし, 帯の代表半径(例: $\frac{R(t-1)+R(t)}{2}$)に配置する
+* 基本: `domain.angleRad` を中心角とし, 帯の代表半径(例: $\frac{R(t-1)+R(t)}{2}$)に配置する
 * 描画時のみ: $\theta$ と $r$ に微小オフセット $(\Delta\theta, \Delta r)$ を加える
 * オフセットは帯とドメイン範囲からはみ出さないよう clamp する
 * オフセットは決定論にする (ズームやパンで点が揺れない)
@@ -138,7 +141,16 @@ nenrin-vis (Core) は, 入力データを離散ステップに正規化済みで
     * `vmin`, `alpha` 等のパラメータで見た目のスケーリングを制御
     * ドメイン角度は入力で与えられたものをそのまま利用(自動配置しない)
 
-### Core / Renderer Split
+中間レイヤとして, Core と Renderer の間に Geometry レイヤを挟む.
+
+* Geometry の責務
+    * Core 出力(`anchors`)を, 描画用の曲線(点列, path)へ変換
+    * 曲線補間, サンプリング, seam(0と$2\pi$)の扱い
+    * d3-shape 等の依存を Core から隔離
+    * 点列(polyline)の点数は可変で良い(補間アルゴリズムに依存)
+    * 出力は `polar` と `xy` を選択式にして良い(`xy` はモデル座標)
+
+### Core / Geometry / Renderer Split
 
 配布単位としても, 計算(Core)と描画(Renderer)を分離する.
 
@@ -147,14 +159,20 @@ TypeScript配布では, CoreとRendererを別パッケージとして公開し, 
 * Core
     * 純粋な計算層. Canvas, DOM, React に依存しない
     * `stepIndex` の起点(0が何日か)や単位(日/週/月)の意味付けは扱わない
+* Geometry
+    * Core 出力を描画用ジオメトリへ変換する層
+    * 曲線補間の試行錯誤をこの層に閉じ込める
 * Renderer
     * Core出力をCanvas等へ描画する層
     * 期間ラベルやツールチップ等, 「起点」や「単位」が必要な表示文脈を扱う
+    * `innerRadius`, zoom, pan, y軸方向等の画面座標系の解釈は Renderer 側の責務
 
 例として, 以下のような配布形態を想定する.
 
 * `@nenrin/core`
     * 入力イベントから骨格/テクスチャの座標を計算して返す
+* `@nenrin/geometry` (仮)
+    * Core出力を補間して, 描画用の曲線データへ変換する
 * `@nenrin/renderer-canvas` または `@nenrin/react`
     * Core出力を描画する
 * `@nenrin/vis` (任意)
@@ -172,7 +190,7 @@ interface NenrinConfig {
 interface Domain {
   id: string;
   label: string; // e.g. "Dev", "Life", "Hobby"
-  angle: number; // 0 - 360 (degrees)
+  angleRad: number; // 0 - 2*pi (radians). 角度は入力で与える
   color: string;
 }
 
@@ -216,6 +234,13 @@ Micro の点表示で必要となる「点の見た目の安定性」は, Render
 
 * seed は `stepIndex`, `domainId`, `weight`, `metadata` 等から決定論に生成する
 * 同一内容のイベントが複数ある場合は, 同一キーの出現回数カウンタを seed に混ぜて分離する
+
+## Domain angle input policy
+
+ドメイン角度は入力で与える方針とする.
+
+* ドメインの近接度は設計意図になり得るため, Core は角度を自動配置しない
+* 将来, 角度をインタラクティブに調整する domain editor を用意しても良い
 
 ## Step Range (Nの定義)
 

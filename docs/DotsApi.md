@@ -19,7 +19,7 @@
 
 このドキュメントで定義する想定パッケージ.
 
-* `@nenrin/dots` (仮)
+* `@nenrin/dots`
 
 `@nenrin/dots` の責務.
 
@@ -102,6 +102,8 @@ SemVer運用.
 
 ## Types
 
+型定義は `@nenrin/types` に置く. `@nenrin/dots` は利用者向けに同じ型を再exportしても良い.
+
 ```ts
 export interface Event {
   stepIndex: number;
@@ -130,12 +132,12 @@ export interface Ridge {
   anchors: PolarAnchor[];
 }
 
-export interface DotPolar {
+export interface PolarPoint {
   thetaRad: number;
   r: number;
 }
 
-export interface DotXy {
+export interface XyPoint {
   x: number;
   y: number;
 }
@@ -148,7 +150,7 @@ export interface NenrinDot {
   eventIndex: number;
 
   // Model coordinate.
-  position: DotPolar | DotXy;
+  position: PolarPoint | XyPoint;
 }
 
 export interface NenrinKnot {
@@ -159,7 +161,7 @@ export interface NenrinKnot {
   eventIndex: number;
 
   // Model coordinate.
-  position: DotPolar | DotXy;
+  position: PolarPoint | XyPoint;
 }
 
 export interface DotsOutput {

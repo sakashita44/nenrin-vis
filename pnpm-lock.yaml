@@ -16,12 +16,36 @@ importers:
         version: 5.9.3
 
   packages/core:
+    dependencies:
+      '@nenrin/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.2
+
+  packages/dots:
+    dependencies:
+      '@nenrin/types':
+        specifier: workspace:*
+        version: link:../types
     devDependencies:
       rimraf:
         specifier: ^6.0.1
         version: 6.1.2
 
   packages/geometry:
+    dependencies:
+      '@nenrin/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.2
+
+  packages/types:
     devDependencies:
       rimraf:
         specifier: ^6.0.1

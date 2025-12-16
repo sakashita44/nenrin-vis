@@ -1,7 +1,7 @@
 {
-    "name": "@nenrin/geometry",
+    "name": "@nenrin/types",
     "version": "0.0.0",
-    "description": "Dependency-free geometry layer for nenrin-vis",
+    "description": "Shared TypeScript types for nenrin-vis packages",
     "license": "MIT",
     "type": "module",
     "main": "./dist/index.cjs",
@@ -22,9 +22,6 @@
         "clean": "rimraf dist",
         "lint": "echo \"(placeholder)\"",
         "typecheck": "tsc -p tsconfig.json --noEmit"
-    },
-    "dependencies": {
-        "@nenrin/types": "workspace:*"
     },
     "devDependencies": {
         "rimraf": "^6.0.1"

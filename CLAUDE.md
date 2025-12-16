@@ -12,12 +12,13 @@ Key concept: Activity density is visualized as "thickness" on polar coordinates,
 
 This is a pnpm monorepo with the following packages:
 
+* `packages/types/`: Shared TypeScript type definitions for all packages. Provides the contract between packages
 * `packages/core/`: Zero-dependency core computation layer. Aggregates input events and generates ridge `anchors` (polar coordinates)
 * `packages/geometry/`: Zero-dependency geometry layer. Converts `anchors` to drawable point sequences (polylines) with injectable curve interpolation algorithms
+* `packages/dots/`: Zero-dependency dots layer. Generates event dots with injectable placement algorithms
 
 Planned packages (not yet implemented):
 
-* `@nenrin/dots`: Generate dots from events and Core output with injectable placement algorithms
 * `@nenrin/geometry-algorithms-d3`: Curve interpolation algorithms using d3-shape
 * `@nenrin/renderer-canvas`: Reference Canvas renderer implementation
 
@@ -27,10 +28,26 @@ Planned packages (not yet implemented):
 
 Each package has clearly defined responsibilities (see `docs/Policy.md`):
 
-* **@nenrin/core**: Aggregates `events` by `(stepIndex, domainId)`, generates ridge `anchors` using `vmin` and `growthPerActivity`. Does NOT handle curve interpolation, sampling, or rendering
-* **@nenrin/geometry**: Converts Core's `anchors` to polylines (point sequences) for rendering. Curve interpolation algorithms are injectable. Does NOT handle UI, innerRadius, zoom/pan, or hit testing
+* **@nenrin/types**: Shared TypeScript type definitions. **Type-only package with no runtime values.** Provides the interface contract between packages. Zero dependencies. Allows packages like `@nenrin/geometry` to be used independently without `@nenrin/core`. Important: Only exports types, never values or functions
+* **@nenrin/core**: Aggregates `events` by `(stepIndex, domainId)`, generates ridge `anchors` using `vmin` and `growthPerActivity`. Depends only on `@nenrin/types`. Does NOT handle curve interpolation, sampling, or rendering
+* **@nenrin/geometry**: Converts Core's `anchors` to polylines (point sequences) for rendering. Curve interpolation algorithms are injectable. Depends only on `@nenrin/types`. Does NOT handle UI, innerRadius, zoom/pan, or hit testing
+* **@nenrin/dots**: Generates event dots with injectable placement algorithms. Depends only on `@nenrin/types`. Does NOT handle Macro/Micro determination or pixel-based hit testing
 
-All packages maintain zero runtime dependencies. External dependencies (like d3-shape) are isolated to separate packages.
+All packages (except `@nenrin/types`) maintain zero runtime dependencies beyond the shared types package. External dependencies (like d3-shape) are isolated to separate packages.
+
+### @nenrin/types Package Policy
+
+**Critical**: `@nenrin/types` is a type-only package with strict rules:
+
+1. **Type-only exports**: Only export TypeScript types, interfaces, and type aliases. Never export values, functions, or classes
+2. **No runtime code**: Must not contain any runtime logic or implementation. The built output should contain no executable code
+3. **Zero dependencies**: Must not depend on any packages (not even other `@nenrin/*` packages)
+4. **No duplication**: Type definitions must not be duplicated across packages. If a type is shared, it belongs in `@nenrin/types`
+5. **Pure data contracts**: Only contains interface definitions that describe data structures passed between packages
+
+**Rationale**: This ensures `@nenrin/types` has zero runtime cost and allows packages to depend on it without creating runtime coupling. It also prevents circular dependencies and allows independent package usage (e.g., using `@nenrin/geometry` without `@nenrin/core`).
+
+**Re-exports**: Other packages may re-export types from `@nenrin/types` for user convenience, but the canonical source is always `@nenrin/types`.
 
 ## Common Commands
 
@@ -109,10 +126,11 @@ corepack prepare pnpm@latest --activate
 
 ### Data Flow
 
-1. Input: `events` array with `{stepIndex, domainId, weight?, metadata?, eventKey?}`
+1. Input: `events` array with `{stepIndex, domainId, weight?, metadata?, eventKey?, isKnot?}`
 2. Core: Aggregates events and generates `anchors` for each ridge
 3. Geometry: Converts `anchors` to drawable `points` using injectable curve algorithm
-4. Renderer: Draws polylines on Canvas/SVG (not in this repo yet)
+4. Dots: Generates dot positions from events and ridges using injectable placement algorithm
+5. Renderer: Draws polylines and dots on Canvas/SVG (not in this repo yet)
 
 ### Growth Model
 

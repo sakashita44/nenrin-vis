@@ -1,4 +1,4 @@
-import type { PolarPoint, XyPoint } from "./index";
+import type { PolarPoint, XyPoint } from "@nenrin/types";
 
 export function polarToXy(p: PolarPoint): XyPoint {
     return {

@@ -53,6 +53,8 @@ SemVer運用.
 
 Geometry の入力は Core の `anchors`.
 
+型定義は `@nenrin/types` に置く. `@nenrin/geometry` は利用者向けに同じ型を再exportしても良い.
+
 入力 `anchors` の順序.
 
 * Core は `anchors` を `thetaRad` 昇順(正規化後)で返す想定

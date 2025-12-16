@@ -51,8 +51,10 @@ dots の仕様は [`docs/DotsApi.md`](docs/DotsApi.md) を参照.
 
 * Language
     * TypeScript
+* Types
+    * `@nenrin/types`: パッケージ間のIF(中間定義)を提供するtype-onlyパッケージ. `@nenrin/core` を使わずに `@nenrin/geometry` 等を利用する場合も, この型に依存すれば契約を維持できる
 * Core logic
-    * `@nenrin/core`: 依存0の計算層. 入力eventsを集計し, ridgeの`anchors`(polar)を生成
+    * `@nenrin/core`: 依存0の計算層(推奨パス). 入力eventsを集計し, ridgeの`anchors`(polar)を生成. ただし `@nenrin/geometry` は `ridges/anchors` を直接渡せば `core` なしでも利用できる
 * Geometry
     * `@nenrin/geometry`: 依存0の幾何層. `anchors`を描画用の点列へ変換(アルゴリズムは外部注入)
     * `@nenrin/geometry-algorithms-d3` (planned): `d3-shape` 等に依存する曲線補間アルゴリズム群
@@ -68,8 +70,9 @@ dots の仕様は [`docs/DotsApi.md`](docs/DotsApi.md) を参照.
 このリポジトリ内のライブラリパッケージは, npm scope 付きで公開する前提.
 
 * `@nenrin/core`
+* `@nenrin/types`
 * `@nenrin/geometry`
-* `@nenrin/dots` (planned)
+* `@nenrin/dots`
 * `@nenrin/geometry-algorithms-d3` (planned)
 
 ## License

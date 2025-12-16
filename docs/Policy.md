@@ -12,9 +12,10 @@
 
 対象.
 
+* `@nenrin/types`
 * `@nenrin/core`
 * `@nenrin/geometry`
-* `@nenrin/dots`(planned)
+* `@nenrin/dots`
 
 対象外.
 
@@ -26,7 +27,8 @@
 基本方針.
 
 * monorepoでpackages単位に分割する
-* Core/Geometry/Dotsは依存0を維持する
+* Typesは完全に依存0, type-only exportを維持する
+* Core/Geometry/Dotsは Types のみに依存する
 * 曲線補間など外部依存が必要な実装は別パッケージへ隔離する
 
 推奨構成.
@@ -34,6 +36,7 @@
 ```text
 root/
 └── packages/
+    ├── types/
     ├── core/
     ├── geometry/
     ├── geometry-algorithms-d3/
@@ -42,6 +45,40 @@ root/
 ```
 
 ## Package Boundaries
+
+### @nenrin/types
+
+責務.
+
+* パッケージ間で共有される型定義のみを提供する
+* データ構造の契約(interface, type)を定義する
+* 循環依存を防ぐための中立な型レイヤとして機能する
+
+制約.
+
+* **Type-only export**: 型, interface, type alias のみをexportする
+* **値の禁止**: 関数, クラス, 定数, enumなどの値を含めない
+* **ランタイムコード禁止**: 実行可能なコードを含めない. ビルド後のJSは空またはre-exportのみ
+* **依存0**: 他のパッケージ(自身の`@nenrin/*`を含む)に依存しない
+* **重複禁止**: 型定義を他パッケージで重複させない. 共有型は必ずこのパッケージへ集約する
+
+非責務.
+
+* 実装ロジック
+* バリデーション関数
+* 型ガード関数
+* ユーティリティ関数
+
+狙い.
+
+* ランタイムコストがゼロの型パッケージとして提供する
+* パッケージ間の循環依存を防ぐ
+* Core なしで Geometry や Dots を利用できる状態を維持する
+
+仕様参照.
+
+* 型定義は各パッケージのAPI仕様ドキュメント(`docs/CoreApi.md`等)で意味論を定義する
+* Typesは型の形状のみを提供し, 意味論はドキュメントで規定する
 
 ### @nenrin/core
 
@@ -171,14 +208,17 @@ root/
 
 方針.
 
-* `@nenrin/core`, `@nenrin/geometry`, `@nenrin/dots` は依存0
+* `@nenrin/types` は完全に依存0 (他の `@nenrin/*` を含む)
+* `@nenrin/core`, `@nenrin/geometry`, `@nenrin/dots` は `@nenrin/types` のみに依存
 * 外部依存が必要な試行錯誤は別パッケージへ隔離する
     * 例: `@nenrin/geometry-algorithms-d3`
 
 狙い.
 
 * 依存地獄の回避
+* 循環依存の防止
 * 利用者が描画方式を自由に選べる状態の維持
+* パッケージを独立して利用可能にする(例: Core なしで Geometry のみ利用)
 
 ## Build Policy
 

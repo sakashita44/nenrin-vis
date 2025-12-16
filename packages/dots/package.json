@@ -1,7 +1,7 @@
 {
-    "name": "@nenrin/geometry",
+    "name": "@nenrin/dots",
     "version": "0.0.0",
-    "description": "Dependency-free geometry layer for nenrin-vis",
+    "description": "Dependency-free dots layer for nenrin-vis",
     "license": "MIT",
     "type": "module",
     "main": "./dist/index.cjs",

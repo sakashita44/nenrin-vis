@@ -68,6 +68,8 @@ SemVer運用.
 
 ### TypeScript types
 
+型定義は `@nenrin/types` に置く. `@nenrin/core` は利用者向けに同じ型を再exportしても良い.
+
 ```ts
 export interface NenrinConfig {
   vmin: number;

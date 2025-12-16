@@ -23,6 +23,9 @@
         "lint": "echo \"(placeholder)\"",
         "typecheck": "tsc -p tsconfig.json --noEmit"
     },
+    "dependencies": {
+        "@nenrin/types": "workspace:*"
+    },
     "devDependencies": {
         "rimraf": "^6.0.1"
     }

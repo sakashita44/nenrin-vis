@@ -1,5 +1,7 @@
 # nenrin-vis
 
+このリポジトリはAIコーディングサービスを利用して作成しています．
+
 Visualizing Accumulation of Activities on Polar Coordinates.
 
 個人の活動の「厚み」を, 年輪 (Tree Rings) のような極座標系で可視化するジェネラティブ・ビューワー.
@@ -24,6 +26,17 @@ nenrin-vis は, 単なる時系列プロットではなく, 活動の蓄積と�
 dots の仕様は [`docs/DotsApi.md`](docs/DotsApi.md) を参照.
 
 環境構築は [`docs/Setup.md`](docs/Setup.md) を参照.
+
+## Docs
+
+* 実装方針: [`docs/Policy.md`](docs/Policy.md)
+* Core API: [`docs/CoreApi.md`](docs/CoreApi.md)
+* Geometry API: [`docs/GeometryApi.md`](docs/GeometryApi.md)
+* Dots API: [`docs/DotsApi.md`](docs/DotsApi.md)
+* Error policy: [`docs/ErrorPolicy.md`](docs/ErrorPolicy.md)
+* Concept: [`docs/concepts.md`](docs/concepts.md)
+* Setup: [`docs/Setup.md`](docs/Setup.md)
+* Roadmap: [`docs/roadmap.md`](docs/roadmap.md)
 
 ## Use Cases
 

@@ -22,7 +22,6 @@ nenrin-vis は, 単なる時系列プロットではなく, 活動の蓄積と�
     * TypeScript
 * Core logic
     * D3.js (`d3-shape`, `d3-scale`): 周期的スプライン補間, 座標計算
-    * Poisson Disk Sampling: 有機的で美しいパーティクル配置 (ブルーノイズ) の生成
 * Rendering
     * HTML5 Canvas API: 数万〜数十万の活動ログ (点) の高速描画
     * React: UIコンポーネント, 状態管理
@@ -33,7 +32,7 @@ nenrin-vis は, 単なる時系列プロットではなく, 活動の蓄積と�
 ## Features (Planned)
 
 * Variable Growth Velocity: 活動量に応じて成長速度が変化し, アメーバ状の有機的な年輪を形成
-* Semantic Zooming: ズームレベルに応じて, 「年輪 (全体)」→「気泡 (月単位)」→「粒子 (詳細ログ)」へ表示メタファーが変化
+* Semantic Zooming: ズームレベルに応じて, Macro(境界線+帯の選択) と Micro(点の表示) を切り替える
 * Generative Animation: 過去から現在へ, 人生が積み重なっていく様子をアニメーションで表現
 
 ## Roadmap

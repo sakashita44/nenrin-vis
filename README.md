@@ -45,6 +45,14 @@ nenrin-vis は, 単なる時系列プロットではなく, 活動の蓄積と�
 現在, Phase 1 (個人サイトでのNotion連携PoC) の開発を進める.
 詳細は [`docs/roadmap.md`](docs/roadmap.md) を参照.
 
+## Package naming
+
+このリポジトリ内のライブラリパッケージは, npm scope 付きで公開する前提.
+
+* `@nenrin/core`
+* `@nenrin/geometry`
+* `@nenrin/geometry-algorithms-d3` (planned)
+
 ## License
 
 MIT License

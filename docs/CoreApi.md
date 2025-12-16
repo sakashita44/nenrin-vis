@@ -1,6 +1,6 @@
 # Core API (Draft)
 
-このドキュメントは `nenrin-core` の API を固定するための仕様メモ. 実装へ移れる状態を作るのが目的.
+このドキュメントは `@nenrin/core` の API を固定するための仕様メモ. 実装へ移れる状態を作るのが目的.
 
 関連ドキュメント.
 
@@ -10,7 +10,7 @@
 
 ## Scope
 
-`nenrin-core` の責務は, `(stepIndex, domainId, weight)` の集合から描画用の幾何データを生成すること.
+`@nenrin/core` の責務は, `(stepIndex, domainId, weight)` の集合から描画用の幾何データを生成すること.
 
 * 入力の離散化(タイムゾーン, 日/週/月区切り)は扱わない
 * Canvas, DOM, React に依存しない
@@ -37,7 +37,7 @@
 ```ts
 export interface NenrinConfig {
   vmin: number;
-  alpha: number;
+  growthPerActivity: number; // aka α
   domains: Domain[];
 }
 
@@ -63,15 +63,25 @@ export interface NenrinInput {
 ### Constraints
 
 * `events.length >= 1`
+* `vmin` は有限(`Number.isFinite`)かつ `vmin > 0`
+* `growthPerActivity` は有限(`Number.isFinite`)かつ `growthPerActivity >= 0`
 * `stepIndex` は整数
 * `stepIndex` は `0..N` を前提とする
 * `domainId` は `config.domains[].id` のいずれか
+* `config.domains[].id` は重複禁止
 * `angleRad` は入力で与える(自動配置しない)
 * `angleRad` は有限(`Number.isFinite`)である必要がある
 * `weight` は未指定なら `1`
 * `weight` は有限(`Number.isFinite`)かつ非負
 
-`angleRad` は任意の実数を許容するが, Core は内部的に $2\pi$ 周期で正規化して扱う(順序付け, 重複判定のため). 推奨は入力側で `0..2*pi` に正規化して渡す.
+`angleRad` は任意の実数を許容するが, Core は内部的に $2\pi$ 周期で正規化して扱う(順序付け, 重複判定のため).
+
+正規化(提案).
+
+* `tau = 2 * Math.PI`
+* `thetaNorm = ((theta % tau) + tau) % tau`
+
+実装は変更し得るが, Core の出力順序と重複判定は「正規化した角度」に基づく.
 
 ### Validation policy
 
@@ -91,7 +101,7 @@ Core は `stepIndex` を離散的なタイムラインとして扱う.
 
 初期半径.
 
-* 実装上は $R(\theta, -1)=0$ とし, step `0` の更新で `vmin + alpha * A(θ,0)` が初期値になる想定
+* 実装上は $R(\theta, -1)=0$ とし, step `0` の更新で `vmin + growthPerActivity * A(θ,0)` が初期値になる想定
 
 つまり, 入力eventsはstep欠損を許容するが, 出力ridgesは常に連続したstepを含む.
 
@@ -111,11 +121,21 @@ export interface NenrinCoreOutput {
   stepCount: number;
   domainCount: number;
 
+  // Canonical domain order used by matrices.
+  // This order is deterministic and independent from input domains array order.
+  domainIds: string[];
+  domainAnglesRad: number[];
+
   // Ridge geometry for each step
   ridges: Ridge[];
 
-  // Optional: per-step aggregated activity, useful for debug/analysis
-  activityByStepDomain?: number[][]; // [t][domainIndex]
+  // Optional: per-step aggregated activity sum, useful for debug/analysis
+  activitySumByStepDomain?: number[][]; // [t][domainIndex]
+
+  // Optional: dictionary style access by domainId.
+  // Intended for debug/analysis and beginners who prefer key-based lookup.
+  // Each array length is stepCount.
+  activitySumSeriesByDomainId?: Record<string, number[]>; // [domainId][t]
 }
 
 export interface Ridge {
@@ -129,7 +149,19 @@ export interface PolarAnchor {
   thetaRad: number;
   r: number;
 }
+
+export interface NenrinCoreApi {
+  computeNenrinCore(input: NenrinInput, options?: NenrinCoreOptions): NenrinCoreOutput;
+}
 ```
+
+`domainIds` と `domainAnglesRad` は同じ長さで, `domainIndex` はこの配列のインデックス.
+
+`activitySumByStepDomain[t][domainIndex]` の `domainIndex` は `domainIds[domainIndex]` を参照する.
+
+`activitySumSeriesByDomainId[domainId][t]` は同じ情報を辞書形式で参照するためのもの.
+
+`ridges[].anchors[]` は `thetaRad` 昇順で返す. この順序は `domainIds` と一致させる.
 
 ### Ridge representation decision
 
@@ -149,9 +181,29 @@ export interface NenrinCoreOptions {
   // If undefined, only duplicate angle detection is performed.
   minDomainAngleSeparationRad?: number;
 
-  // Whether to include activityByStepDomain in the output.
-  includeActivityMatrix?: boolean; // default: false
+  // Whether to include activitySumByStepDomain in the output.
+  includeActivitySumMatrix?: boolean; // default: false
+
+  // Whether to include activitySumSeriesByDomainId in the output.
+  includeActivitySumSeriesByDomainId?: boolean; // default: false
 }
+
+```
+
+運用方針.
+
+* 通常運用では, `minDomainAngleSeparationRad` を正の値で指定するのが安全
+* `minDomainAngleSeparationRad = 0` の場合, 実質的に「正規化後の完全一致(===)のみを重複として弾く」設定になる
+
+## Public API shape
+
+公開APIは次で固定する.
+
+```ts
+export function computeNenrinCore(
+  input: NenrinInput,
+  options?: NenrinCoreOptions
+): NenrinCoreOutput;
 ```
 
 ### Parameter semantics
@@ -160,8 +212,8 @@ export interface NenrinCoreOptions {
     * `vmin` は全 domain に対して毎 step 適用する
     * event が無い step でも成長する(時間の層が完全に消えない)
 
-* `alpha`
-    * `weight` の集計値に対するスケール係数
+* `growthPerActivity` (aka $\alpha$)
+    * `weight` の集計値を半径増分へ換算する成長係数
 
 ## Sampling policy
 
@@ -206,13 +258,32 @@ Core 出力は入力が同一なら同一にする.
     * `config.domains` の入力順序は出力へ影響しない
     * `domainCount = config.domains.length`
 
-`activityByStepDomain` を含める場合, `[t][domainIndex]` の `domainIndex` は上記 `anchors` の順序と一致させる.
+`activitySumByStepDomain` を含める場合, `[t][domainIndex]` の `domainIndex` は `domainIds` の順序と一致させる.
+
+## Error cases
+
+次は `Error` を throw する.
+
+* `events.length === 0`
+* `config.domains.length === 0`
+* `vmin` が非有限, または `vmin <= 0`
+* `growthPerActivity` が非有限, または `growthPerActivity < 0`
+* `config.domains[].id` の重複
+* `stepIndex` が整数でない
+* `stepIndex < 0`
+* `domainId` が `config.domains[].id` に存在しない
+* `angleRad` が非有限(`NaN`, `Infinity`)
+* `weight` が非有限, または負
+* `thetaRad` 正規化後の重複(同一角度). 判定は `===` で良い
+
+`minDomainAngleSeparationRad` が指定された場合, 角度近接の違反も `Error` として良い.
 
 ## Notes for renderer
 
 Renderer 側で扱う想定.
 
 * Geometry レイヤ(`nenrin-geometry`)を使い, `anchors` を点列へ変換
+* Geometry レイヤ(`@nenrin/geometry`)を使い, `anchors` を点列へ変換
 * `innerRadius` の導入
 * Micro の点座標の微小オフセット
 * seed の生成(決定論)

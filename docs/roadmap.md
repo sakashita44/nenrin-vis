@@ -11,15 +11,15 @@
 ### Core Logic Implementation
 
 * 言語: TypeScript
-* 目標: 離散ステップ入力 (`stepIndex`) を受け取り, 描画用の座標データ (境界線/Ridge, 帯/Band) を出力する計算モジュール `nenrin-core` の作成
+* 目標: 離散ステップ入力 (`stepIndex`) を受け取り, 描画用の座標データ (境界線/Ridge, 帯/Band) を出力する計算モジュール `@nenrin/core` の作成
 * 方針: 曲線補間(d3-shape等)はCoreに入れず, geometryレイヤへ分離
 
 ### Geometry Implementation
 
-* 目標: Core出力(`anchors`)を補間し, 描画用の曲線データへ変換する `nenrin-geometry` (仮) の作成
+* 目標: Core出力(`anchors`)を補間し, 描画用の曲線データへ変換する `@nenrin/geometry` の作成
 * 技術候補: `d3-shape` (Spline) 等を試行錯誤して決定
 * 方針: 出力は `polar` / `xy` を選択式にして, 描画方式は利用者が選べる状態にする
-* 依存方針: `nenrin-geometry` 本体は依存0 + アルゴリズム外部注入を維持し, `d3-shape` 等に依存する曲線実装は別パッケージ(例: `@nenrin/geometry-algorithms-d3`)として分離する
+* 依存方針: `@nenrin/geometry` 本体は依存0 + アルゴリズム外部注入を維持し, `d3-shape` 等に依存する曲線実装は別パッケージ(例: `@nenrin/geometry-algorithms-d3`)として分離する
 
 ### Renderer Implementation
 
@@ -29,7 +29,7 @@
 
 ### Notion API Integration
 
-* 目標: Next.js (App Router) 上で Notion API を叩き, 日記データベースを `nenrin-core` 形式 (離散ステップ, 1イベント=1ドメイン, `weight`) に変換するMapperを実装
+* 目標: Next.js (App Router) 上で Notion API を叩き, 日記データベースを `@nenrin/core` 形式 (離散ステップ, 1イベント=1ドメイン, `weight`) に変換するMapperを実装
 * 到達状態: 自身のサイトで「自分の年輪」が表示される状態
 
 ## Polishing & Interaction
@@ -64,7 +64,7 @@
 
 ### Library Publish
 
-* 目標: `nenrin-core` および `react-nenrin` (仮) を npm パッケージとして公開
+* 目標: `@nenrin/core` および `react-nenrin` (仮) を npm パッケージとして公開
 * 追加: 開発者向けドキュメントの整備
 
 ## Recommended Architecture (Monorepo)
@@ -81,7 +81,7 @@ root/
 │   ├── personal-site/  (Next.js: 自身のサイト + Notion API連携)
 │   └── web-service/    (Next.js: 将来の日記/可視化サービス)
 └── packages/
-    ├── core/           (TypeScript: 計算ロジック. 依存はD3.js等のみ)
+    ├── core/           (TypeScript: 計算ロジック. 依存0)
     ├── geometry/       (TypeScript: 曲線補間/サンプリング. d3-shape等)
     └── renderer/       (React: Canvas描画コンポーネント)
 ```

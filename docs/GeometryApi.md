@@ -1,6 +1,6 @@
 # Geometry API (Draft)
 
-このドキュメントは `nenrin-geometry` (仮) の API を固定するための仕様メモ. 目的は, 曲線補間やサンプリングの試行錯誤を `nenrin-core` から切り離し, 利用者が描画方式(Canvas, SVG, WebGL等)を選択できる状態を作ること.
+このドキュメントは `@nenrin/geometry` の API を固定するための仕様メモ. 目的は, 曲線補間やサンプリングの試行錯誤を `@nenrin/core` から切り離し, 利用者が描画方式(Canvas, SVG, WebGL等)を選択できる状態を作ること.
 
 関連ドキュメント.
 
@@ -108,7 +108,7 @@ export interface GeometryOptions {
 
   // Optional validation.
   // If enabled, algorithm must return finite numbers.
-  validateFinite?: boolean;
+  validateFinite?: boolean; // default: false
 }
 ```
 
@@ -122,12 +122,21 @@ export function buildRidgePolylines(
 ): RidgePolylinePolar[] | RidgePolylineXy[];
 ```
 
+## Determinism
+
+同一入力なら同一出力になる前提.
+
+* `ridges` の順序は入力順序を維持する
+* 各 `points` の順序はアルゴリズム実装に依存するが, 同一anchors入力なら同一順序になる必要がある
+
 ## Validation
 
 Geometry は次を `Error` 扱いにして良い.
 
 * `points.length < 3` (閉曲線として成立しない)
 * `thetaRad`, `r`, `x`, `y` が非有限値
+
+`validateFinite` が `true` の場合, 上記の非有限値は必ず `Error` とする.
 
 ## Notes
 

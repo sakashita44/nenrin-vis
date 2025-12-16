@@ -24,7 +24,7 @@ $$
 
 * $v_{min}$ (Minimum Growth Velocity): 生存基底速度 ($v_{min} > 0$). 活動ゼロの期間も極薄い層を形成し, 時間軸が消失することを防ぐ (「生きていた証」の層).
 * $A(\theta, t)$ (Activity Volume): そのジャンルにおける活動量.
-* $\alpha$ (Scaling Coefficient): 視覚的な重み付け係数.
+* $\alpha$ (Scaling Coefficient): 視覚的な重み付け係数. 入力 `NenrinConfig.growthPerActivity` と同義の係数.
 
 ### Boundary Condition: Seamless Closed Curve
 
@@ -138,7 +138,7 @@ nenrin-vis (Core) は, 入力データを離散ステップに正規化済みで
     * 正規化やスコアリング(滞在時間, 文字数, 重要度など)を `weight` に変換
 * Core (nenrin-core) の責務
     * `(stepIndex, domainId, weight)` の集合を集計し, 描画用の骨格(年輪)とテクスチャ(点群)を生成
-    * `vmin`, `alpha` 等のパラメータで見た目のスケーリングを制御
+    * `vmin`, `growthPerActivity` 等のパラメータで成長モデル(例: $\Delta r(\theta, t)$)を制御
     * ドメイン角度は入力で与えられたものをそのまま利用(自動配置しない)
 
 中間レイヤとして, Core と Renderer の間に Geometry レイヤを挟む.
@@ -182,16 +182,15 @@ TypeScript配布では, CoreとRendererを別パッケージとして公開し, 
 
 ```ts
 interface NenrinConfig {
-  vmin: number; // Minimum growth per step
-  alpha: number; // Activity scaling factor
-  domains: Domain[]; // Categories mapping to angles
+    vmin: number; // Minimum growth per step
+    growthPerActivity: number; // Growth per activity sum (α)
+    domains: Domain[]; // Categories mapping to angles
 }
 
 interface Domain {
   id: string;
   label: string; // e.g. "Dev", "Life", "Hobby"
   angleRad: number; // 0 - 2*pi (radians). 角度は入力で与える
-  color: string;
 }
 
 /**
@@ -217,13 +216,20 @@ interface NenrinInput {
 Core 内部では, 入力イベントをステップとドメイン単位で集計し, $A(\theta, t)$ を構成する.
 
 * 典型例: あるドメイン $d$ に対応する角度を $\theta_d$ とすると, $A(\theta_d, t) = \sum weight$.
+* 実装上, この集計値を `activitySum` と呼ぶ
 * `weight` 未指定は `1` として扱う.
 * 角度方向のスムージング(隣接ドメインへ滲ませる等)は必要になった時点で追加検討とする.
 
 ## Input Constraints (入力制約)
 
 * `events` は1件以上を必須とする
+* `vmin` は有限値のみを許容する. `vmin > 0` を要求する
+* `growthPerActivity` は有限値のみを許容する. `growthPerActivity >= 0` を要求する
+* `domains` は1件以上を必須とする
+* `domains[].id` は重複禁止
+* `domains[].angleRad` は有限値のみを許容する. `NaN`, `Infinity` は不正入力として扱う
 * `stepIndex` は整数のみを許容する. `0..N` の範囲を前提とする
+* `domainId` は `domains[].id` のいずれか
 * `weight` は非負のみを許容する. `0` は許容するが推奨しない
 * `weight` は有限値のみを許容する. `NaN`, `Infinity` は不正入力として扱う
 

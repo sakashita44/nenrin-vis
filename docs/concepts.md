@@ -48,8 +48,12 @@ $\theta = 0$ (始点) と $\theta = 2\pi$ (終点) の不連続性を防ぐた�
 
 ### Band (帯 / ステップ領域)
 
-ステップ $t$ は, 2本の境界線 $R(\theta, t-1)$ と $R(\theta, t)$ に挟まれた領域を持つ.
+ここでの $R(\theta, t)$ は, step $t$ の更新を適用した後の外周境界(ridge)を表す.
+
+step $t$ は, 2本の境界線 $R(\theta, t-1)$ と $R(\theta, t)$ に挟まれた領域(band)を持つ.
 イベントは本質的に, この帯の内部に属する.
+
+入力イベント `event.stepIndex = t` は, `band(t)` に属する event として解釈する.
 
 * 表現イメージ
 
@@ -211,7 +215,7 @@ interface Domain {
  * 複数ドメインに出したい場合は, 入力側でイベントを分割して渡す.
  */
 interface Event {
-  stepIndex: number; // Discrete time index (integer, 0..N). timestampはCoreの責務外
+    stepIndex: number; // Discrete step index (integer, 0..N). Event belongs to band(t) between ridge(t-1) and ridge(t). timestamp is out of Core scope
   domainId: string;
   weight?: number; // Default: 1.0. Must be finite and non-negative
   metadata?: unknown; // Optional passthrough
@@ -248,9 +252,10 @@ Core 内部では, 入力イベントをステップとドメイン単位で集�
 ## Event Identity (eventId の扱い)
 
 Core 入力として `eventId` は要求しない.
-Micro の点表示で必要となる「点の見た目の安定性」は, Renderer 側で内部的に seed を生成して担保する.
+Micro の点表示で必要となる「点の見た目の安定性」は, `eventKey` を優先し, 無い場合は Renderer または Dots 側で内部的に seed を生成して担保する.
 
-* seed は `stepIndex`, `domainId`, `weight`, `metadata` 等から決定論に生成する
+* `eventKey?: string` があればそれを優先して seed に使う
+* 無ければ `stepIndex`, `domainId`, `weight`, `metadata` 等から決定論に seed を生成する
 * 同一内容のイベントが複数ある場合は, 同一キーの出現回数カウンタを seed に混ぜて分離する
 
 ## Domain angle input policy

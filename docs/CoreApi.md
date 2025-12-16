@@ -28,8 +28,9 @@
 
 * **step**: 離散時間インデックス `stepIndex` の1単位
 * **domain**: 活動ジャンル. `domainId` で識別し, `angleRad` を持つ
-* **ridge**: 各 step の外周境界線(閉曲線)
-* **band**: step `t-1` と `t` の ridge に挟まれた領域
+* **ridge**: 各 step `t` の外周境界線(閉曲線). 数式上の $R(\theta, t)$ に対応する
+* **band**: step `t` に属する領域. `ridge(t-1)` と `ridge(t)` に挟まれた領域
+* **band center**: `band(t)` の代表半径. $\frac{R(\theta, t-1)+R(\theta, t)}{2}$
 
 ## Input
 
@@ -49,10 +50,16 @@ export interface Domain {
 }
 
 export interface Event {
+  // step `t`.
+  // event is interpreted as belonging to `band(t)`, the area between `ridge(t-1)` and `ridge(t)`.
   stepIndex: number;
   domainId: string;
   weight?: number;
   metadata?: unknown;
+
+  // Optional stable key for determinism across data changes.
+  // Core accepts this field but must ignore it.
+  eventKey?: string;
 }
 
 export interface NenrinInput {
@@ -64,9 +71,11 @@ export interface NenrinInput {
 ### Constraints
 
 * `events.length >= 1`
+* `config.domains.length >= 3`
 * `vmin` は有限(`Number.isFinite`)かつ `vmin > 0`
 * `growthPerActivity` は有限(`Number.isFinite`)かつ `growthPerActivity >= 0`
 * `stepIndex` は整数
+* `stepIndex` は非負(`stepIndex >= 0`)
 * `stepIndex` は `0..N` を前提とする
 * `domainId` は `config.domains[].id` のいずれか
 * `config.domains[].id` は重複禁止
@@ -104,10 +113,17 @@ Core は `stepIndex` を離散的なタイムラインとして扱う.
 * `stepCount = maxStepIndex + 1`
 * Core は step `t` にイベントが無くても `t = 0..maxStepIndex` の全stepを計算する
 * イベントが無いstepでも, 全domainが `vmin` により成長する
+* 入力 `events[].stepIndex = t` は, `band(t)` に属する event として解釈する
 
 初期半径.
 
 * 実装上は $R(\theta, -1)=0$ とし, step `0` の更新で `vmin + growthPerActivity * A(θ,0)` が初期値になる想定
+
+band の内側境界.
+
+* Core は `stepIndex = -1` の ridge を出力しない
+* そのため, `t = 0` の band を構成する場合, 内側境界は暗黙に $R(\theta, -1)=0$ を使う
+    * 例: dots を band の中心へ置く場合, `t = 0` は $\frac{R(\theta,-1)+R(\theta,0)}{2} = \frac{R(\theta,0)}{2}$ を代表半径として良い
 
 つまり, 入力eventsはstep欠損を許容するが, 出力ridgesは常に連続したstepを含む.
 
@@ -163,11 +179,21 @@ export interface NenrinCoreApi {
 
 `domainIds` と `domainAnglesRad` は同じ長さで, `domainIndex` はこの配列のインデックス.
 
+`domainAnglesRad` と `anchors[].thetaRad` は $[0, 2\pi)$ に正規化済みの角度を返す.
+
 `activitySumByStepDomain[t][domainIndex]` の `domainIndex` は `domainIds[domainIndex]` を参照する.
 
 `activitySumSeriesByDomainId[domainId][t]` は同じ情報を辞書形式で参照するためのもの.
 
 `ridges[].anchors[]` は `thetaRad` 昇順で返す. この順序は `domainIds` と一致させる.
+
+anchors の形状保証.
+
+* 各 `ridges[t].anchors` は必ず `domainCount` 個を返す
+* `anchors` は domain 欠損を作らない
+    * event が無い domain でも `vmin` により成長するため, `r` は常に定義できる
+* `anchors[i].domainId === domainIds[i]` を満たす
+* `anchors[i].thetaRad === domainAnglesRad[i]` を満たす
 
 ### Ridge representation decision
 
@@ -199,17 +225,21 @@ export interface NenrinCoreOptions {
 運用方針.
 
 * 通常運用では, `minDomainAngleSeparationRad` を正の値で指定するのが安全
-* 推奨デフォルトは 10° (約0.1745 rad). 未指定なら 10° を採用する
+* 推奨デフォルトは `0.05` rad
+    * `options` 未指定, または `minDomainAngleSeparationRad` 未指定の場合, Core は `0.05` rad を採用する
+        * つまり, 角度近接チェックはデフォルトで有効
 * `minDomainAngleSeparationRad = 0` の場合, 近接チェックは無効化する(正規化後の重複角度のみを弾く)
+
+`0.05` rad 未満を使う場合, 利用側が明示的に設定する.
 
 options の検証.
 
 * `minDomainAngleSeparationRad` は有限(`Number.isFinite`)かつ `>= 0` を要求する. 違反は `Error`
 * `domainCount * minDomainAngleSeparationRad > 2 * Math.PI` の場合, 角度分離が原理的に不可能なので `Error` として良い
 
-10° の換算.
+既定値のメモ.
 
-* `minDomainAngleSeparationRadDefault = (10 * Math.PI) / 180`
+* `minDomainAngleSeparationRadDefault = 0.05`
 
 ## Public API shape
 
@@ -239,8 +269,8 @@ Core は角度方向を入力 `domains[].angleRad` に依存させる.
 * 角度の近接度は入力側の設計意図になり得るため, Core は自動配置しない
 * バリデーションとして, 同一角度(重複)は `Error` 扱いにするのが安全
 * 近接度チェックは `minDomainAngleSeparationRad` を用いて行う
-    * 未指定の場合, デフォルト(10°)を適用する
-    * `0` の場合, 近接チェックを無効化する
+    * 未指定の場合, デフォルト(`0.05` rad)を適用する
+        * `0` の場合, 近接チェックを無効化する
 
 近接判定(提案).
 
@@ -277,6 +307,8 @@ Core 出力は入力が同一なら同一にする.
 
 * `events` の順序は出力へ影響しない
     * Core は `(stepIndex, domainId)` 単位で集計し, 集計結果だけを使う
+* `events[].metadata` と `events[].eventKey` は Core 出力へ影響しない
+    * Core は `metadata` と `eventKey` を参照しない
 * `anchors` の順序は固定
     * `anchors` は `thetaRad` 昇順(正規化後)で返す
     * `config.domains` の入力順序は出力へ影響しない
@@ -290,6 +322,7 @@ Core 出力は入力が同一なら同一にする.
 
 * `events.length === 0`
 * `config.domains.length === 0`
+* `config.domains.length < 3`
 * `vmin` が非有限, または `vmin <= 0`
 * `growthPerActivity` が非有限, または `growthPerActivity < 0`
 * `config.domains[].id` の重複
@@ -315,4 +348,4 @@ Renderer 側で扱う想定.
 ## Open questions
 
 * PoC の curve は何を採用するか(geometryレイヤの責務)
-* 角度近接バリデーション(`minDomainAngleSeparationRad`)の既定方針
+* 角度近接バリデーション(`minDomainAngleSeparationRad`)の既定値を `0.05` rad とする

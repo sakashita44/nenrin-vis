@@ -61,6 +61,15 @@ Non-goals.
 * 追加/削除時も「同じ event は同じ位置に置きたい」なら, 外部から安定なキーが必要
     * ただしキーの一意性チェックは必須にしない(重複は許容し, bucket 内の出現回数で区別する)
 
+## Terms
+
+このドキュメントで使う用語は `docs/CoreApi.md` と揃える.
+
+* `ridge(t)` は step `t` の外周境界. 数式上の $R(\theta, t)$ に対応する
+* `band(t)` は `ridge(t-1)` と `ridge(t)` に挟まれた領域
+* 入力 `event.stepIndex = t` は `band(t)` に属する event を意味する
+* dot の代表半径は常に `band(t)` の中心 $\frac{R(\theta, t-1)+R(\theta, t)}{2}$ を使い, jitter は band 内に clamp する
+
 ## Types
 
 ```ts
@@ -164,7 +173,8 @@ export function buildDots(
 
 * 1 event = 1 dot
 * event の属する band は step `t = event.stepIndex`
-* 半径方向は `R(t-1)` と `R(t)` の間に置く
+* 半径方向の基準は `band(t)` の中心 $\frac{R(t-1)+R(t)}{2}$ とし, `R(t-1)` と `R(t)` の間に収まるように jitter + clamp する
+    * `t = 0` の内側境界は暗黙に `R(-1) = 0` として扱う
 * 角度方向は `domain.angleRad` を中心に, 隣接 domain 角度の安全範囲内で微小にずらす
 
 決定性(提案).

@@ -56,6 +56,7 @@ $\theta = 0$ (始点) と $\theta = 2\pi$ (終点) の不連続性を防ぐた�
 * 境界線 (Ridge): 年輪の輪郭. 常に表示する
 * 帯 (Band): ステップが占める領域. Macro での選択単位
 * 点 (Event Dots): Micro のみで表示する. 常時表示しない
+* 節 (Knots): 特筆すべきイベントのマーカー. 表示の可否や間引きは Renderer 側で決める
 
 ### Ridge (骨格 / 年輪の線)
 
@@ -104,6 +105,19 @@ Micro は「点が重ならずに表示できる」幾何条件を満たす場�
 * dots の仕様と配置アルゴリズムは Core から分離し, 補助パッケージ(例: `@nenrin/dots`)で扱う
 * 詳細は `docs/DotsApi.md` を参照
 
+### Texture & Knots (質感と節)
+
+ここでの Texture は「点の密度表現」ではなく, 年輪が積層してできる見た目の質感を指す.
+
+* Layers (層): step ごとの `band(t)` が積み重なったもの
+    * 記録のない step は薄く, 充実した step は厚くなり, 全体として模様(Texture)になる
+    * これは主に Core の成長モデルと ridge/band の積層で成立する
+* Knots (節): 特筆すべき成果やイベントを, 年輪上のアクセントとして強調するためのマーカー
+    * Knots は「特別な dot」として扱う
+    * Knots の判定(どの event を knot 扱いにするか)は Integration layer の責務とする
+    * `@nenrin/dots` は, 入力の knot を含む event から knot marker のモデル座標を生成して返す
+    * Macro でも knots だけは表示する, のような LOD 方針は Renderer 側の責務とする
+
 ### Inner Radius (中心余白)
 
 `stepIndex = 0` を原点に直結すると, 中心付近にイベントが集中して見た目が破綻しやすい. これを避けるため, Renderer 側で内側に余白(最小半径)を持たせる.
@@ -130,6 +144,7 @@ LOD は Macro と Micro の2段とする.
     * 帯は step 単位で選択する
     * step の単位はズームに応じて変わる (例: 月なら30, 日なら1)
     * 点は描画しない
+    * 節 (Knots) は任意で表示して良い(表示の可否と間引きは Renderer 側で決める)
 * Micro
     * 表示範囲に対して点が過密にならない幾何条件を満たす場合のみ, 点を表示する
     * 点は表示範囲内の帯に属するイベントだけを計算して描画する
@@ -256,7 +271,7 @@ Core 内部では, 入力イベントをステップとドメイン単位で集�
 ## Input Constraints (入力制約)
 
 * `events` は1件以上を必須とする
-* `vmin` は有限値のみを許容する. `vmin > 0` を要求する
+* `vmin` は有限値のみを許容する. `vmin >= 0` を要求する
 * `growthPerActivity` は有限値のみを許容する. `growthPerActivity >= 0` を要求する
 * `domains` は1件以上を必須とする
     * Coreの集計と `anchors` 生成としては `>= 1` で成立する

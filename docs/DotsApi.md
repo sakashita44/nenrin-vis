@@ -25,12 +25,14 @@
 * 入力 `events` と Core 出力 `ridges` から, dots の配置(モデル座標)を決定する
 * dot と event の対応を保持し, hit test 結果から `metadata` を参照できる状態を作る
 * 配置アルゴリズムは外部注入可能とする
+* Knots (節) を特別な dot(marker)として扱い, 必要なら別リストとして出力する
 
 Non-goals.
 
 * Canvas/DOM/React への依存
 * 画面座標(y軸下向き等), `innerRadius`, zoom/pan
 * クリック判定そのもの(ピクセル距離の hit test)の実装
+* Macro/Micro で knots を表示するかどうかの方針決定
 
 ## Design choices
 
@@ -83,6 +85,10 @@ export interface Event {
   // If provided, dots can remain stable even when events array order changes.
   // Uniqueness is not required.
   eventKey?: string;
+
+  // Optional flag to treat this event as a Knot (special marker).
+  // The decision of what becomes a knot is out of scope of @nenrin/dots.
+  isKnot?: boolean;
 }
 
 export interface PolarAnchor {
@@ -117,8 +123,23 @@ export interface NenrinDot {
   position: DotPolar | DotXy;
 }
 
+export interface NenrinKnot {
+  stepIndex: number;
+  domainId: string;
+
+  // Reference to input events.
+  eventIndex: number;
+
+  // Model coordinate.
+  position: DotPolar | DotXy;
+}
+
 export interface DotsOutput {
   dots: NenrinDot[];
+
+  // Optional knot markers.
+  // Renderer decides whether to show knots in Macro and/or Micro.
+  knots?: NenrinKnot[];
 }
 ```
 
@@ -192,3 +213,4 @@ Renderer 側の責務.
 * dots のモデル座標を画面座標へ変換する
 * ピクセル距離による hit test を行い, `eventIndex` から `events[eventIndex].metadata` を参照して表示する
 * Micro 表示の幾何条件判定(`minDotSpacingPx` 等)を行う
+* knots を表示するかどうか, 表示する場合の間引きや優先順位付けを決める

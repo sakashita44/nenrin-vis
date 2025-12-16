@@ -25,6 +25,12 @@ dots の仕様は [`docs/DotsApi.md`](docs/DotsApi.md) を参照.
 
 環境構築は [`docs/Setup.md`](docs/Setup.md) を参照.
 
+## Use Cases
+
+* **Personal Chronicle:** 「何もしなかった期間」は省略され, 「充実した期間」が強調されるバイオグラフィー.
+* **Skill Growth:** 学習量(インプット/アウトプット)に応じて, 特定領域が肥大化していくスキル可視化.
+* **Project Density:** プロジェクトごとのリソース投下量やコミット密度の推移確認.
+
 ## Tech Stack
 
 パフォーマンスと拡張性を考慮し, 以下の技術スタックを採用する.

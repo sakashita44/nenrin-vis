@@ -21,6 +21,12 @@
 * 方針: 出力は `polar` / `xy` を選択式にして, 描画方式は利用者が選べる状態にする
 * 依存方針: `@nenrin/geometry` 本体は依存0 + アルゴリズム外部注入を維持し, `d3-shape` 等に依存する曲線実装は別パッケージ(例: `@nenrin/geometry-algorithms-d3`)として分離する
 
+### Dots Implementation
+
+* 目標: `events` と Core 出力を入力に, Event Dots (点) を生成する補助パッケージ `@nenrin/dots` (仮) の作成
+* 方針: 点の配置ルールは外部注入できる形にして, 試行錯誤をパッケージ外へ逃がせるようにする
+* 目的: Micro 表示と `metadata` 参照(クリック/ホバー)を成立させる
+
 ### Renderer Implementation
 
 * 目標: Coreの出力データを HTML5 Canvas 上に描画する React コンポーネントの作成
@@ -83,5 +89,6 @@ root/
 └── packages/
     ├── core/           (TypeScript: 計算ロジック. 依存0)
     ├── geometry/       (TypeScript: 曲線補間/サンプリング. d3-shape等)
+    ├── dots/           (TypeScript: Event Dots. 依存0 + 外部注入)
     └── renderer/       (React: Canvas描画コンポーネント)
 ```

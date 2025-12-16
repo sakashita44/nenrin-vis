@@ -22,6 +22,7 @@
 * Notion API やデータ取得
 * UI, LOD 判定, マウスイベント処理
 * 色やラベルの見た目
+* Event Dots (点) の出力仕様は別途検討 (現状の Core API には含めない)
 
 ## Terms
 
@@ -86,6 +87,11 @@ export interface NenrinInput {
 ### Validation policy
 
 不正入力は `Error` を throw する.
+
+方針.
+
+* Core は「入力がクリーンである」前提で計算へ入るため, 計算前に入力を全て検証して弾く
+* Core はクリーンな入力から, クリーン(非有限値を含まない)な出力を返すのを目標にする
 
 * 例: `events.length === 0`
 * 例: 未定義 `domainId`
@@ -178,7 +184,7 @@ Core API は `computeNenrinCore(input, options)` のような形を想定する.
 ```ts
 export interface NenrinCoreOptions {
   // Optional validation for domain angle proximity.
-  // If undefined, only duplicate angle detection is performed.
+  // If undefined, default value is applied.
   minDomainAngleSeparationRad?: number;
 
   // Whether to include activitySumByStepDomain in the output.
@@ -193,7 +199,17 @@ export interface NenrinCoreOptions {
 運用方針.
 
 * 通常運用では, `minDomainAngleSeparationRad` を正の値で指定するのが安全
-* `minDomainAngleSeparationRad = 0` の場合, 実質的に「正規化後の完全一致(===)のみを重複として弾く」設定になる
+* 推奨デフォルトは 10° (約0.1745 rad). 未指定なら 10° を採用する
+* `minDomainAngleSeparationRad = 0` の場合, 近接チェックは無効化する(正規化後の重複角度のみを弾く)
+
+options の検証.
+
+* `minDomainAngleSeparationRad` は有限(`Number.isFinite`)かつ `>= 0` を要求する. 違反は `Error`
+* `domainCount * minDomainAngleSeparationRad > 2 * Math.PI` の場合, 角度分離が原理的に不可能なので `Error` として良い
+
+10° の換算.
+
+* `minDomainAngleSeparationRadDefault = (10 * Math.PI) / 180`
 
 ## Public API shape
 
@@ -222,7 +238,15 @@ Core は角度方向を入力 `domains[].angleRad` に依存させる.
 * `domains[].angleRad` は API で入力必須
 * 角度の近接度は入力側の設計意図になり得るため, Core は自動配置しない
 * バリデーションとして, 同一角度(重複)は `Error` 扱いにするのが安全
-* 近接度チェックは `minDomainAngleSeparationRad` が指定された場合のみ適用する
+* 近接度チェックは `minDomainAngleSeparationRad` を用いて行う
+    * 未指定の場合, デフォルト(10°)を適用する
+    * `0` の場合, 近接チェックを無効化する
+
+近接判定(提案).
+
+* `angleRad` を $2\pi$ 周期で正規化し, `thetaNorm` 昇順にソートする
+* 隣接差分 `delta[i] = theta[i+1] - theta[i]` と, wrap 差分 `deltaWrap = (theta[0] + 2\pi) - theta[last]` を計算する
+* 最小差分が `minDomainAngleSeparationRad` 未満なら `Error`
 
 順序ポリシー.
 

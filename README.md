@@ -13,6 +13,8 @@ nenrin-vis は, 単なる時系列プロットではなく, 活動の蓄積と�
 
 詳細は [`docs/concepts.md`](docs/concepts.md) を参照.
 
+dots の仕様は [`docs/DotsApi.md`](docs/DotsApi.md) を参照.
+
 環境構築は [`docs/Setup.md`](docs/Setup.md) を参照.
 
 ## Tech Stack
@@ -27,6 +29,8 @@ nenrin-vis は, 単なる時系列プロットではなく, 活動の蓄積と�
 * Geometry
     * `@nenrin/geometry`: 依存0の幾何層. `anchors`を描画用の点列へ変換(アルゴリズムは外部注入)
     * `@nenrin/geometry-algorithms-d3` (planned): `d3-shape` 等に依存する曲線補間アルゴリズム群
+* Dots (planned)
+    * `@nenrin/dots`: `events` と Core 出力から dots を生成し, Micro 表示と `metadata` 参照を成立させる(配置は外部注入)
 * Rendering
     * HTML5 Canvas API: 数万〜数十万の活動ログ (点) の高速描画
     * React: UIコンポーネント, 状態管理
@@ -51,6 +55,7 @@ nenrin-vis は, 単なる時系列プロットではなく, 活動の蓄積と�
 
 * `@nenrin/core`
 * `@nenrin/geometry`
+* `@nenrin/dots` (planned)
 * `@nenrin/geometry-algorithms-d3` (planned)
 
 ## License

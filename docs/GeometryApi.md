@@ -134,6 +134,13 @@ Geometry は次を `Error` 扱いにして良い.
 * `d3-shape` 等の依存は Geometry に閉じ込める
 * アルゴリズムの試行錯誤は `CurveAlgorithm` 実装の差し替えで行う
 
+パッケージ分割(推奨).
+
+* `@nenrin/geometry`: 依存0. `buildRidgePolylines` と型, 最小アルゴリズム(`linear-closed`)のみ提供
+* `@nenrin/geometry-algorithms-d3` (仮): `d3-shape` 等に依存する `CurveAlgorithm` 実装群を提供
+
+この分割により, Geometry本体は「アルゴリズム注入」という設計を維持しつつ, 開発段階でd3系の試行錯誤を追加しやすくする.
+
 ## 初期実装のベースラインアルゴリズム
 
 まずは最小のベースラインアルゴリズムから始める.

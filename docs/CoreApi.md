@@ -15,6 +15,7 @@
 * 入力の離散化(タイムゾーン, 日/週/月区切り)は扱わない
 * Canvas, DOM, React に依存しない
 * 曲線補間やサンプリングは扱わない(中間レイヤへ分離)
+* ランタイム依存は0を維持する(集計とanchors生成に専念する)
 
 ## Non-goals
 
@@ -201,9 +202,9 @@ Core 出力は入力が同一なら同一にする.
 * `events` の順序は出力へ影響しない
     * Core は `(stepIndex, domainId)` 単位で集計し, 集計結果だけを使う
 * `anchors` の順序は固定
-  * `anchors` は `thetaRad` 昇順(正規化後)で返す
-  * `config.domains` の入力順序は出力へ影響しない
-  * `domainCount = config.domains.length`
+    * `anchors` は `thetaRad` 昇順(正規化後)で返す
+    * `config.domains` の入力順序は出力へ影響しない
+    * `domainCount = config.domains.length`
 
 `activityByStepDomain` を含める場合, `[t][domainIndex]` の `domainIndex` は上記 `anchors` の順序と一致させる.
 

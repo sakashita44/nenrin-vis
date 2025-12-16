@@ -17,8 +17,9 @@
 ### Geometry Implementation
 
 * 目標: Core出力(`anchors`)を補間し, 描画用の曲線データへ変換する `nenrin-geometry` (仮) の作成
-* 技術: `d3-shape` (Spline) 等を試行錯誤して決定
+* 技術候補: `d3-shape` (Spline) 等を試行錯誤して決定
 * 方針: 出力は `polar` / `xy` を選択式にして, 描画方式は利用者が選べる状態にする
+* 依存方針: `nenrin-geometry` 本体は依存0 + アルゴリズム外部注入を維持し, `d3-shape` 等に依存する曲線実装は別パッケージ(例: `@nenrin/geometry-algorithms-d3`)として分離する
 
 ### Renderer Implementation
 

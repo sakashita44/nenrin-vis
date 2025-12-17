@@ -206,6 +206,36 @@ corepack prepare pnpm@latest --activate
 * `docs/concepts.md`: Mathematical concepts and terminology
 * `docs/Setup.md`: Development environment setup
 * `docs/roadmap.md`: Project roadmap
+* `docs/progress/`: Progress tracking documents (see below)
+
+## Progress Tracking
+
+**CRITICAL**: Track implementation progress in `docs/progress/` documents. **Always update after any implementation work**.
+
+### Current tracking document
+
+* `docs/progress/v1-0.md`: v1.0 milestone and implementation status for each package
+
+### Update policy
+
+Always update `docs/progress/v1-0.md` at these moments:
+
+1. **Package implementation progress**: When functions or modules are implemented, update the corresponding checkboxes to `[x]`
+2. **Phase transitions**: When completing a Phase, update the "Current Status" section
+3. **Blocker discovery**: When finding issues that block implementation, add them to the "Blockers" section
+4. **New task discovery**: When additional work is identified during implementation, add it to the package's "Remaining Work" list
+5. **Completion criteria met**: When Phase completion criteria are satisfied, update the milestone status
+
+### Visibility principle
+
+Progress documents serve as the "Single Source of Truth" for development. Keeping implementation status up-to-date provides:
+
+* Clear visibility on what to do next
+* Visual distinction between completed and pending work
+* Easy tracking of overall project progress
+* Prevention of duplicate or missed work
+
+**Important**: Updating progress documents is a mandatory task, equal in importance to implementation work. Never postpone updates.
 
 ## Implementation Anti-patterns
 

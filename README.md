@@ -4,7 +4,7 @@
 
 Visualizing Accumulation of Activities on Polar Coordinates.
 
-個人の活動の「厚み」を, 年輪 (Tree Rings) のような極座標系で可視化するジェネラティブ・ビューワー.
+個人の活動の「厚み」を, 年輪 (Tree Rings) のような極座標系で可視化するジェネラティブライブラリ.
 
 入力の `stepIndex` は「日」に限らず, 時, 分, 年, あるいは時間でない任意の離散軸でも良い.
 

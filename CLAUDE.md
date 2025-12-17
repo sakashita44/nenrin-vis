@@ -261,7 +261,29 @@ Avoid:
 * Use direct form in Japanese (e.g., `~する` not `~します`)
 * Follow markdownlint rules strictly(4space indent, asterisk for lists, etc. see, github/copilot-instructions.md)
 
-## Git Commit Prefixes
+## Git Workflow
+
+### Branch Naming Convention
+
+Branch names should follow this pattern:
+
+```text
+<type>/YYYYMM/<author>/<issue-number>-<description>
+```
+
+* `<type>`: Branch type (e.g., `feat`, `fix`, `docs`, `chore`, `refactor`)
+* `YYYYMM`: Year and month when the branch was created (e.g., `202512`)
+* `<author>`: Author's username (e.g., `sakashita44`)
+* `<issue-number>`: GitHub issue number if applicable, or omit this part if no issue exists
+* `<description>`: Short kebab-case description of the work
+
+Examples:
+
+* With issue: `feat/202512/sakashita44/42-add-user-authentication`
+* Without issue: `docs/202512/sakashita44/update-progress-tracking`
+* With issue: `fix/202512/sakashita44/123-fix-validation-bug`
+
+### Git Commit Prefixes
 
 * `feat:` - New features
 * `fix:` - Bug fixes
